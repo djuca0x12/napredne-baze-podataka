@@ -1,0 +1,2 @@
+// za pokretanje docker kontejnera sa redis i neo4j bazama podataka
+docker compose up -d

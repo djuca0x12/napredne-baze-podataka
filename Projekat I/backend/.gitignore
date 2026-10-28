@@ -1,0 +1,41 @@
+# ---- .NET / ASP.NET Core ----
+# Build results
+bin/
+obj/
+
+# Visual Studio files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+# Uncomment if you have local NuGet packages
+# *.nuget/
+
+# Logs
+*.log
+
+# Publish outputs
+publish/
+wwwroot/
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# DotCover
+*.dotCover
+
+# Others
+*.dbmdl
+*.bak
+*.backup
+*.mdf
+*.ldf
