@@ -1,34 +1,69 @@
+using Neo4j.Driver;
+using StackExchange.Redis;
+using AsteroidTracker.Repositories;
+using AsteroidTracker.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// NASA API servis - vrsimo registraciju, 
+// da bi mogao da se obezbedi HttpClient!
+builder.Services.AddHttpClient<SimpleNasaService>();
 
-builder.Services.AddDbContext<IspitContext>(options =>
+// Servis za izracunavanje slicnosti izmedju asteroida
+builder.Services.AddSingleton<AsteroidSimilarityService>();
+
+// Neo4j drajver
+builder.Services.AddSingleton<IDriver>(sp =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("IspitCS"));
+    var config = sp.GetRequiredService<IConfiguration>();
+
+    var uri = config.GetConnectionString("Neo4j")!;
+    var user = config["Neo4j:User"]!;
+    var password = config["Neo4j:Password"]!;
+
+    return GraphDatabase.Driver(
+        uri, AuthTokens.Basic(user, password));
 });
 
+// Redis konekcija
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+
+    return ConnectionMultiplexer.Connect(
+        config.GetConnectionString("Redis")!);
+});
+
+// Neo4j repozitorijum - koji cuva podatke u Neo4J-u.
+builder.Services.AddSingleton<Neo4jAsteroidRepository>();
+
+// Servis koji periodicno preuzimanje podataka.
+builder.Services.AddHostedService<AsteroidBackgroundService>();
+
+// Redis:
+builder.Services.AddSingleton<RedisCacheService>();
+
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CORS", policy =>
     {
         policy.AllowAnyHeader()
               .AllowAnyMethod()
-              .WithOrigins("http://localhost:5500",
-                           "https://localhost:5500",
-                           "http://127.0.0.1:5500",
-                           "https://127.0.0.1:5500");
+              .WithOrigins(
+                  "http://localhost:5500",
+                  "https://localhost:5500",
+                  "http://127.0.0.1:5500",
+                  "https://127.0.0.1:5500");
     });
 });
 
 builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -36,11 +71,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("CORS");
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

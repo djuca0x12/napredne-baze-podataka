@@ -1,0 +1,54 @@
+0. Pokretanje docker composera:
+    docker compose up -d
+
+1. Kreirati API Key i ubaciti u appsettings.Devolpment.json!
+
+2. Instalirano:
+    dotnet add package Neo4j.Driver
+    dotnet add package StackExchange.Redis
+    dotnet add package Microsoft.Extensions.Http
+
+3. Pristup Neo4J preko browser-a:
+    http://localhost:7474/browser/
+    -Zatim unesi password iz appsettings.Devolpment.json (your_secure_password)
+    -Primer upita koji vraca sve asteroide:     MATCH (a:Asteroid)
+                                                RETURN a;
+    -Kako nam izgleda baza: (Ne mogu da verujem da ovo radi, VALJDA!?)
+        MATCH (a:Asteroid)
+        OPTIONAL MATCH (a)-[h:HAS_APPROACH]->(p:Approach)
+        OPTIONAL MATCH (a)-[s:SIMILAR_TO]-(b:Asteroid)
+        RETURN a, h, p, s, b
+        LIMIT 100; // Obavezno limitiraj da ne bi sve poludelo 
+
+4. Proveriti da li ce biti potrebno da dodamo jos jednu liniju
+    u CORS-u da bi frontend mogao da pristupi backend-u!
+
+5. Promeniti vreme preuzimanja podataka u fajlu ASteroidBackgroundService
+    trenutno se podaci o asteroidima preuzimaju na 24h.                                                 
+
+7. Trenutno se asteroidi preuzimaju na 24h
+   Upisuju se u bazu, zajedno sa prilazima => grana Approach
+   Povezuju se sa slicnim asteroidima => SIMILIAR_TO
+
+9. Leaderboard - preko redisa.
+
+10. Brojac - preko redisa
+           - gde povecavamo brojac za pregled detalja (ako se oni vide na kartici odmah)
+           - proveriti da li se stvarno povecavaju brojaci, jer ja mislim
+             da mi nigde ne kreiramo kljuc, a inkrementiramo
+           - potreban kontroler
+
+11. Da li cemo podatke za brojace i generalno kes da cuvamo u Neo4J?
+    -Trenutno ne, tako da su na primer brojaci (kao i sve ostalo) aktuelni dok  
+    aplikacija radi.
+
+12. Kontroleri prvo pristupaju kesu za podakte, pa ukoliko ih tamo ima
+    vracamo ih odatle, ukoliko ih nema trazimo ih u bazi, azuriramo kes
+    i vracamo!
+
+13. Kontroleri za Asteroide, Leaderboard i Brojace! => Potrebno doraditi
+
+14. Mislim da postoji metoda na frontu koja moze da nam iscrta graf bazu.
+
+15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
+    -search, similarities
