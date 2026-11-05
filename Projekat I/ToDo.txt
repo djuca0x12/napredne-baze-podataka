@@ -52,3 +52,19 @@
 
 15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
     -search, similarities
+
+16. Da li nam je neophodno "IspitCS": "Server=(localdb)\\Ispit;Database=Ispit" u appsettings.json?
+
+17. Dodati show similar hover i search bar na frontu
+
+18. Dodati deleteExpired metodu za pražnjenje baze od zastarelih asteroida
+
+19. Povećati na 0.8 faktor sličnosti
+
+20. Obrisati IspitController.cs i IspitContext.cs
+
+21. Da li treba i .NET i React da pokrećemo preko Docker-a?
+
+22. Svaki API endpoint mapirati pregledno u api.js (više fajlova po potrebi)
+
+23. Povezati back i front <3

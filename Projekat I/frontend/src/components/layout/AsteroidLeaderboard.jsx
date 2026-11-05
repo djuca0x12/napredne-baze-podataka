@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AsteroidCard from './AsteroidCard';
 import '../../styles/AsteroidLeaderboard.css'
 
-const MOCK_ASTEROIDS = [
+export const MOCK_ASTEROIDS = [
     {
         id: "2024-AB1",
         name: "2024 AB1",
@@ -98,6 +98,7 @@ const MOCK_ASTEROIDS = [
 export default function AsteroidLeaderboard() {
     const [activeTab, setActiveTab] = useState('speed');
     const [selectedAsteroid, setSelectedAsteroid] = useState(null);
+    const [openDropdownId, setOpenDropdownId] = useState(null);
 
     const sortedAsteroids = [...MOCK_ASTEROIDS].sort((a, b) => {
         if (activeTab === 'speed') return b.speedKmS - a.speedKmS;
@@ -106,8 +107,31 @@ export default function AsteroidLeaderboard() {
         return 0;
     });
 
-    const handleShowSimilar = (asteroid) => {
-        setSelectedAsteroid(asteroid);
+    // pronalazi slične asteroide na osnovu izabranog kriterijuma sličnosti
+    const handleFindSimilarBy = (targetAsteroid, criterion) => {
+        const remaining = MOCK_ASTEROIDS.filter(ast => ast.id !== targetAsteroid.id);
+
+        let closestMatch = remaining[0];
+        let smallestDiff = Infinity;
+
+        remaining.forEach(ast => {
+            let diff = 0;
+            if (criterion === 'speed') {
+                diff = Math.abs(ast.speedKmS - targetAsteroid.speedKmS);
+            } else if (criterion === 'diameter') {
+                diff = Math.abs(ast.diameterKm - targetAsteroid.diameterKm);
+            } else if (criterion === 'distance') {
+                diff = Math.abs(ast.missDistanceKm - targetAsteroid.missDistanceKm);
+            }
+
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                closestMatch = ast;
+            }
+        });
+
+        setSelectedAsteroid(closestMatch);
+        setOpenDropdownId(null);
     };
 
     return (
@@ -207,14 +231,40 @@ export default function AsteroidLeaderboard() {
                                                 {(asteroid.missDistanceKm / 1000000).toFixed(2)} <span className="unit">M km</span>
                                             </td>
 
-                                            {/* Action */}
+                                            {/* Action with Hover Menu */}
                                             <td className="text-right">
-                                                <button
-                                                    onClick={() => handleShowSimilar(asteroid)}
-                                                    className="action-btn"
+                                                <div
+                                                    className="dropdown-wrapper"
+                                                    onMouseEnter={() => setOpenDropdownId(asteroid.id)}
+                                                    onMouseLeave={() => setOpenDropdownId(null)}
                                                 >
-                                                    Show Similar
-                                                </button>
+                                                    <button className="action-btn">
+                                                        Show Similar ▾
+                                                    </button>
+
+                                                    {openDropdownId === asteroid.id && (
+                                                        <div className="similar-dropdown-menu">
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => handleFindSimilarBy(asteroid, 'speed')}
+                                                            >
+                                                                ⚡ By Speed
+                                                            </button>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => handleFindSimilarBy(asteroid, 'diameter')}
+                                                            >
+                                                                🪐 By Diameter
+                                                            </button>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={() => handleFindSimilarBy(asteroid, 'distance')}
+                                                            >
+                                                                🎯 By Distance
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );

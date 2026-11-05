@@ -1,6 +1,8 @@
 import React from 'react';
 import AsteroidDashboardMetrics from './components/layout/AsteroidDashboardMetrics';
 import AsteroidLeaderboard from './components/layout/AsteroidLeaderboard';
+import AsteroidSearch from './components/layout/AsteroidSearch';
+import { MOCK_ASTEROIDS } from './components/layout/AsteroidLeaderboard';
 
 export default function App() {
   return (
@@ -12,6 +14,8 @@ export default function App() {
           apiCalls={342}
           totalTracked={1250}
         />
+
+        <AsteroidSearch asteroids={MOCK_ASTEROIDS} />
 
         <AsteroidLeaderboard />
 
