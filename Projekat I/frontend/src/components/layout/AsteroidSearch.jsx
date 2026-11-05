@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AsteroidCard from './AsteroidCard';
 import '../../styles/AsteroidSearch.css';
 
@@ -7,71 +7,105 @@ export default function AsteroidSearch({ asteroids = [] }) {
     const [searchResult, setSearchResult] = useState(null);
     const [searched, setSearched] = useState(false);
     const [loading, setLoading] = useState(false);
+    const timerRef = useRef(null);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (!query.trim()) return;
+    useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
+    const handleSearch = (event) => {
+        event.preventDefault();
+        const normalizedQuery = query.trim().toLowerCase();
+        if (!normalizedQuery || loading) return;
+
+        window.clearTimeout(timerRef.current);
         setLoading(true);
         setSearched(true);
+        setSearchResult(null);
 
-        // Simulate database/API latency for space telemetry search
-        // todo: obrisati nakon spajanja backend-a!
-        setTimeout(() => {
-            const found = asteroids.find(
-                (ast) =>
-                    ast.name.toLowerCase().includes(query.toLowerCase().trim()) ||
-                    ast.id.toLowerCase().includes(query.toLowerCase().trim())
+        // todo: obrisati nepotreban delay uz pretragu kad se poveže backend
+        timerRef.current = window.setTimeout(() => {
+            const found = asteroids.find((asteroid) =>
+                asteroid.name.toLowerCase().includes(normalizedQuery) ||
+                asteroid.id.toLowerCase().includes(normalizedQuery)
             );
             setSearchResult(found || null);
             setLoading(false);
         }, 350);
     };
 
+    const clearSearch = () => {
+        window.clearTimeout(timerRef.current);
+        setSearchResult(null);
+        setSearched(false);
+        setLoading(false);
+        setQuery('');
+    };
+
     return (
-        <div className="asteroid-search-container">
+        <section className="asteroid-search-container" aria-labelledby="asteroid-search-title">
             <div className="search-header">
-                <div className="telemetry-badge">
-                    <span className="pulsing-dot"></span>
-                    NeoWS Database Query
+                <div className="search-eyebrow">
+                    <span className="search-radar" aria-hidden="true">⌕</span>
+                    <span>NEOWS DATABASE</span>
+                    <span className="search-demo-tag">DEMO CATALOG</span>
                 </div>
-                <h2 className="search-title">Search Asteroid by Name or ID</h2>
+                <h2 className="search-title" id="asteroid-search-title">Find a near-Earth object</h2>
+                <p className="search-description">
+                    Search the catalog by asteroid name or official designation.
+                </p>
             </div>
 
-            <form onSubmit={handleSearch} className="search-form">
-                <div className="search-input-wrapper">
-                    <span className="search-icon">🔭</span>
+            <form onSubmit={handleSearch} className="search-form" role="search">
+                <label className="search-input-wrapper">
+                    <span className="search-icon" aria-hidden="true">⌕</span>
+                    <span className="sr-only">Asteroid name or ID</span>
                     <input
-                        type="text"
+                        type="search"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="e.g., Apophis, 2024-AB1, 99942..."
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="e.g. Apophis, 2024-AB1, 99942..."
                         className="search-input"
+                        autoComplete="off"
                     />
-                </div>
-                <button type="submit" className="search-submit-btn" disabled={loading}>
-                    {loading ? 'Scanning...' : 'Initialize Search'}
+                    {query && (
+                        <button
+                            type="button"
+                            className="search-clear-btn"
+                            onClick={clearSearch}
+                            aria-label="Clear search"
+                        >
+                            ×
+                        </button>
+                    )}
+                </label>
+                <button
+                    type="submit"
+                    className="search-submit-btn"
+                    disabled={loading || !query.trim()}
+                >
+                    {loading ? (
+                        <><span className="loading-spinner" aria-hidden="true" /> Searching</>
+                    ) : 'Search catalog'}
                 </button>
             </form>
 
-            {searched && !loading && !searchResult && (
-                <div className="search-no-results">
-                    <span>⚠️ No Near-Earth Object found matching "{query}". Check designation or try another query.</span>
-                </div>
-            )}
+            <p className="search-hint">TIP: Press Enter to search · Names and object IDs are supported</p>
 
-            {searchResult && (
-                <div className="search-results-wrapper">
-                    <AsteroidCard
-                        asteroid={searchResult}
-                        onClose={() => {
-                            setSearchResult(null);
-                            setSearched(false);
-                            setQuery('');
-                        }}
-                    />
-                </div>
-            )}
-        </div>
+            <div className="search-feedback" aria-live="polite" aria-atomic="true">
+                {searched && loading && (
+                    <div className="search-loading">Searching the asteroid catalog…</div>
+                )}
+                {searched && !loading && !searchResult && (
+                    <div className="search-no-results">
+                        <strong>No matching object found</strong>
+                        <span>Check the designation or try another name or ID.</span>
+                    </div>
+                )}
+                {searchResult && (
+                    <div className="search-results-wrapper">
+                        <AsteroidCard asteroid={searchResult} onClose={clearSearch} />
+                    </div>
+                )}
+            </div>
+        </section>
     );
 }

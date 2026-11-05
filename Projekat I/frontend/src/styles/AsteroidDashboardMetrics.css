@@ -1,85 +1,148 @@
 .dashboard-metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 0.25rem;
 }
 
 .metric-card {
-    background: #0b1120;
-    border: 1px solid #334155;
-    border-radius: 1rem;
-    padding: 1.25rem 1.5rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    min-width: 0;
+    min-height: 156px;
+    padding: 1.25rem 1.35rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    gap: 0.85rem;
+    border: 1px solid var(--space-border);
+    border-radius: var(--space-radius);
+    background: linear-gradient(145deg, rgba(17, 29, 48, 0.96), rgba(10, 18, 32, 0.96));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    transition: border-color var(--space-transition), transform var(--space-transition), box-shadow var(--space-transition);
 }
 
 .metric-card:hover {
-    border-color: #22d3ee;
-    box-shadow: 0 10px 20px -3px rgba(6, 182, 212, 0.2);
+    transform: translateY(-2px);
+    border-color: rgba(34, 211, 238, 0.42);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24), 0 0 18px rgba(6, 182, 212, 0.07);
 }
 
-.metric-header {
+.metric-header,
+.metric-value-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
 .metric-title {
-    font-size: 0.75rem;
-    font-family: monospace;
+    color: var(--space-text-secondary);
+    font: 500 0.7rem/1.45 "DM Mono", monospace;
+    letter-spacing: 0.045em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #cbd5e1;
+}
+
+.metric-symbol {
+    width: 1.7rem;
+    height: 1.7rem;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 8px;
+    color: var(--space-cyan);
+    background: var(--space-cyan-soft);
+    font-size: 0.95rem;
+}
+
+.metric-symbol--danger {
+    color: var(--space-danger);
+    border-color: rgba(251, 113, 133, 0.25);
+    background: rgba(244, 63, 94, 0.1);
     font-weight: 700;
 }
 
-.status-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #22c55e;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
-}
-
-.metric-value-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-}
-
 .metric-number {
-    font-size: 1.85rem;
-    font-weight: 800;
-    color: #ffffff;
-    font-family: monospace;
+    color: var(--space-text);
+    font: 700 clamp(1.8rem, 3vw, 2.15rem)/1.1 "DM Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.055em;
 }
 
-.metric-sub {
-    font-size: 0.875rem;
-    color: #94a3b8;
-    font-weight: 600;
+.metric-number small {
+    color: var(--space-text-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0;
 }
 
+.metric-sub,
 .metric-trend {
+    color: var(--space-text-muted);
     font-size: 0.75rem;
-    font-family: monospace;
-    color: #94a3b8;
-    font-weight: 600;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.metric-description {
+    margin: auto 0 0;
+    color: var(--space-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #86efac;
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
+}
+
+.metric-progress {
+    height: 5px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #263449;
+}
+
+.metric-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0891b2, #67e8f9);
+    transition: width 300ms ease;
 }
 
 .text-rose {
-    color: #fda4af !important;
+    color: var(--space-danger) !important;
 }
 
 .text-cyan {
-    color: #67e8f9 !important;
+    color: var(--space-cyan) !important;
+}
+
+@media (max-width: 800px) {
+    .dashboard-metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .dashboard-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .metric-card {
+        min-height: 0;
+        padding: 1.1rem 1.15rem;
+    }
 }

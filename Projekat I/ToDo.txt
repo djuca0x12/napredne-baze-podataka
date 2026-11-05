@@ -28,7 +28,7 @@
 
 7. Trenutno se asteroidi preuzimaju na 24h
    Upisuju se u bazu, zajedno sa prilazima => grana Approach
-   Povezuju se sa slicnim asteroidima => SIMILIAR_TO
+   Povezuju se sa slicnim asteroidima => SIMILAR_TO
 
 9. Leaderboard - preko redisa.
 
@@ -55,7 +55,7 @@
 
 16. Da li nam je neophodno "IspitCS": "Server=(localdb)\\Ispit;Database=Ispit" u appsettings.json?
 
-17. Dodati show similar hover i search bar na frontu
+    urađeno -> 17. Dodati show similar hover i search bar na frontu
 
 18. Dodati deleteExpired metodu za pražnjenje baze od zastarelih asteroida
 
@@ -67,4 +67,6 @@
 
 22. Svaki API endpoint mapirati pregledno u api.js (više fajlova po potrebi)
 
-23. Povezati back i front <3
+23. Povezati back i front <3 (obavezno obrisati setTimeout koji imitira latenciju pri pristupu bazi)
+
+24. Ispisati smisleniji tekst za celu aplikaciju
