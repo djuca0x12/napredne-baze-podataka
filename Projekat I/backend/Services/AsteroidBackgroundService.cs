@@ -50,6 +50,16 @@ public class AsteroidBackgroundService : BackgroundService
                 // Upisujemo nove asteroide i njihove prilaske
                 await _repository.SaveAsteroidsAsync(newAsteroids);
 
+                // Brisanje zasterelih podataka iz Neo4J-a
+                var cleanup = await _repository.DeleteExpiredAsteroidsAsync();
+
+                _logger.LogInformation(
+                    "Ciscenje baze zavrseno. " +
+                    "Obrisano asteroida: {DeletedAsteroids}. " +
+                    "Obrisano prilazaka: {DeletedApproaches}.",
+                    cleanup.DeletedAsteroids,
+                    cleanup.DeletedApproaches);
+
                 // Ucitavamo SVE asteroide iz Neo4J baze
                 // RAZMISLITI: Da li je ovo dobro/efikasno?
                 var allAsteroids = await _repository.GetAllAsteroidsAsync();

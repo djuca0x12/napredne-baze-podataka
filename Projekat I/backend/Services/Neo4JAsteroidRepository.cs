@@ -1,4 +1,5 @@
 
+using AsteroidTracker.Code;
 using AsteroidTracker.Models;
 using Neo4j.Driver;
 
@@ -575,5 +576,76 @@ public class Neo4jAsteroidRepository
         });
 
         return result;
+    }
+
+    // Brisanje asteroida!
+    // Brise prilaske koji su prosli ili su za vise od 7 dana,
+    // a zatim i asteroide koji nemaju nijedan preostali prilazak.
+    public async Task<CleanupResult> DeleteExpiredAsteroidsAsync()
+    {
+        await using var session = _driver.AsyncSession();
+
+        return await session.ExecuteWriteAsync(async tx =>
+        {
+            DateTime today = DateTime.UtcNow.Date;
+
+            long currentTimestamp =
+                new DateTimeOffset(today).ToUnixTimeMilliseconds();
+
+            long maxTimestamp =
+                DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeMilliseconds();
+
+            // 1. Brisemo prilaske koji su prosli ili su za vise od 7 dana.
+            var approachResult = await tx.RunAsync(
+                """
+                MATCH (a:Asteroid)-[r:HAS_APPROACH]->(p:Approach)
+                WHERE p.epochDateCloseApproach < $currentTimestamp
+                OR p.epochDateCloseApproach > $maxTimestamp
+
+                WITH a, p, r
+                DELETE r, p
+
+                RETURN count(p) AS deletedApproaches
+                """,
+                new
+                {
+                    currentTimestamp,
+                    maxTimestamp
+                });
+
+            var approachRecord = await approachResult.SingleAsync();
+
+            int deletedApproaches =
+                Convert.ToInt32(approachRecord["deletedApproaches"]);
+
+            // 2. Brisemo asteroide koji vise nemaju nijedan prilazak.
+            // DETACH DELETE uklanja i sve njihove SIMILAR_TO relacije.
+            var asteroidResult = await tx.RunAsync(
+                """
+                MATCH (a:Asteroid)
+                WHERE NOT EXISTS {
+                    MATCH (a)-[:HAS_APPROACH]->(:Approach)
+                }
+
+                WITH collect(a) AS expiredAsteroids
+
+                FOREACH (a IN expiredAsteroids |
+                    DETACH DELETE a
+                )
+
+                RETURN size(expiredAsteroids) AS deletedAsteroids
+                """);
+
+            var asteroidRecord = await asteroidResult.SingleAsync();
+
+            int deletedAsteroids =
+                Convert.ToInt32(asteroidRecord["deletedAsteroids"]);
+
+            return new CleanupResult
+            {
+                DeletedApproaches = deletedApproaches,
+                DeletedAsteroids = deletedAsteroids,
+            };
+        });
     }
 }

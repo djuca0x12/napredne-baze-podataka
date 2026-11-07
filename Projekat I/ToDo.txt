@@ -48,8 +48,6 @@
 
 13. Kontroleri za Asteroide, Leaderboard i Brojace! => Potrebno doraditi
 
-14. Mislim da postoji metoda na frontu koja moze da nam iscrta graf bazu.
-
 15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
     -search, similarities
 
