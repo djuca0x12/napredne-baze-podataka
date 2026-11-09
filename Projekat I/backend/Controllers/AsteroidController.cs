@@ -96,7 +96,8 @@ public class AsteroidController : ControllerBase
         // Sredjujemo naziv:
         string normalizedName = name.Trim().ToLowerInvariant();
 
-        // Redis kljuc:
+        // Redis kljuc: 
+        // todo: da li je validan format ključa za više potencijalnih rezultata? dodati hash/brojač/uuid?
         string key = $"asteroid:search:{normalizedName}";
 
         var result = await _cache.GetAsync<List<AsteroidModel>>(key);

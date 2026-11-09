@@ -39,7 +39,10 @@ public class SimilarityController : ControllerBase
         {
             try
             {
-                similarities = await _repository.GetSimilarAsteroidsAsync(id, criterion, 0.5);
+                // čita se iz neo4j baze
+                // todo: upisati u keš! 
+                // todo: promeniti faktor sličnosti, šta ako je similarities == null?
+                similarities = await _repository.GetSimilarAsteroidsAsync(id, criterion, 0.85);
             }
             catch(ArgumentException)
             {

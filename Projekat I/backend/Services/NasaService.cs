@@ -147,6 +147,8 @@ public class SimpleNasaService
 
         // Isti asteroid moze biti vracen za vise datuma
         // Spajamo ga u jedan objekat i objedinjujemo prilaske
+        // todo: da li je onda uopšte moguće da bude više prilazaka ako uzmemo samo prvi?
+        // ili smo samo odbacili duplikate istih prilazaka?
         return list
             .GroupBy(a => a.Id) // grupisemo asteroide po id-u
             .Select(group => // za svaku grupu

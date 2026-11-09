@@ -12,6 +12,7 @@ namespace AsteroidTracker.Services;
 // Iz Neo4j baze preuzmemo sve asteroide i njihove prilaske.
 // Izracunamo slicnosti između svih parova.
 // Sacuvamo ili azuriramo SIMILAR_TO relacije.
+// Nakon poziva API-ja, baza se čisti od zastarelih unosa
 public class AsteroidBackgroundService : BackgroundService
 {
     private readonly SimpleNasaService _nasaService;
@@ -71,6 +72,7 @@ public class AsteroidBackgroundService : BackgroundService
                 await _repository.SaveSimilaritiesAsync(similarities);
 
                 // Brisemo zastarele podatke iz kesa
+                // todo: da li treba prazniti i redis od zastarelih podataka ili je to automatski?
                 await _cache.InvalidateAsteroidCacheAsync(allAsteroids.Select(a => a.Id).ToList());
 
                 _logger.LogInformation(
