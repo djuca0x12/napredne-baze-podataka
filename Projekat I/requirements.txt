@@ -36,6 +36,21 @@ zrange leaderboard:closest 0 9 withsccores
 // prikazaće ključeve prvih 10 najbližih asteroida, sa vrednostima sortiranim u opadajućem redosledu (zato rev u zrevrange)
 zrevrange leaderboard:largest 0 9 withsccores
 
+// pregled nekoliko korišćenih redis ključeva
+    // rezultati pretrage
+    asteroid:search:v1:2019
+    asteroid:search:v1:name
+
+    // detalji pojedinačnih asteroida
+    asteroid:3841634
+    asteroid:3843278
+
+    // statistika
+    asteroid:3841634:views
+    asteroid:3841634:searches
+    stats:totalViews
+    stats:totalSearches
+
 // testiranje AsteroidController.cs
 https://localhost:7080/Asteroid
 https://localhost:7080/Asteroid/id?id=3841634

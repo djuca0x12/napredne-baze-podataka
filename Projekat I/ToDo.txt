@@ -1,31 +1,23 @@
-4. Proveriti da li ce biti potrebno da dodamo jos jednu liniju
-    u CORS-u da bi frontend mogao da pristupi backend-u!
-
 5. Promeniti vreme preuzimanja podataka u fajlu ASteroidBackgroundService
-    trenutno se podaci o asteroidima preuzimaju na 24h.                                                 
-
-7. Trenutno se asteroidi preuzimaju na 24h
+    trenutno se podaci o asteroidima preuzimaju na 24h.                                           
    Upisuju se u bazu, zajedno sa prilazima => grana Approach
    Povezuju se sa slicnim asteroidima => SIMILAR_TO
 
 10. Brojac - preko redisa
            - gde povecavamo brojac za pregled detalja (ako se oni vide na kartici odmah)
-           - proveriti da li se stvarno povecavaju brojaci, jer ja mislim
-             da mi nigde ne kreiramo kljuc, a inkrementiramo
-           - potreban kontroler
 
 11. Da li cemo podatke za brojace i generalno kes da cuvamo u Neo4J?
     -Trenutno ne, tako da su na primer brojaci (kao i sve ostalo) aktuelni dok  
-    aplikacija radi.
+    aplikacija radi i TTL ne istekne.
 
 12. Kontroleri prvo pristupaju kesu za podakte, pa ukoliko ih tamo ima
     vracamo ih odatle, ukoliko ih nema trazimo ih u bazi, azuriramo kes
     i vracamo!
 
-13. Kontroleri za Asteroide i Brojace! => Potrebno doraditi
+13. Kontroleri za Asteroide! => Potrebno doraditi
 
 15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
-    -search, similarities
+    -similarities
 
 16. Da li nam je neophodno "IspitCS": "Server=(localdb)\\Ispit;Database=Ispit" u appsettings.json?
 
@@ -40,7 +32,5 @@
 25. K-Means algoritam za klasterovanje čvorova
 
 26. Simulacija promene vrednosti za asteroide iz leaderboard-a
-
-27. Swagger endpoint?
 
 28. deployment?

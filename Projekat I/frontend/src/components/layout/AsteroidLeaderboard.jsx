@@ -2,18 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import AsteroidCard from './AsteroidCard';
 import '../../styles/AsteroidLeaderboard.css';
 
-export const MOCK_ASTEROIDS = [
-    { id: '2024-AB1', name: '2024 AB1', speedKmS: 42.5, diameterKm: 1.2, missDistanceKm: 1240000, hazardous: true, orbitClass: 'Apollo' },
-    { id: '2023-XF7', name: '(2023 XF7)', speedKmS: 18.2, diameterKm: 3.8, missDistanceKm: 450000, hazardous: false, orbitClass: 'Aten' },
-    { id: '99942-APOPHIS', name: '99942 Apophis', speedKmS: 30.7, diameterKm: 0.37, missDistanceKm: 31000, hazardous: true, orbitClass: 'Aten' },
-    { id: '2021-AG', name: '2021 AG', speedKmS: 55.1, diameterKm: 0.85, missDistanceKm: 2150000, hazardous: false, orbitClass: 'Apollo' },
-    { id: '2025-QZ', name: '2025 QZ', speedKmS: 12.4, diameterKm: 5.1, missDistanceKm: 7800000, hazardous: false, orbitClass: 'Amor' },
-    { id: '2022-MK4', name: '2022 MK4', speedKmS: 38.9, diameterKm: 0.45, missDistanceKm: 620000, hazardous: true, orbitClass: 'Apollo' },
-    { id: '2020-ND', name: '2020 ND', speedKmS: 22.3, diameterKm: 0.17, missDistanceKm: 5090000, hazardous: false, orbitClass: 'Apollo' },
-    { id: '2026-HC', name: '2026 HC', speedKmS: 61.8, diameterKm: 2.4, missDistanceKm: 980000, hazardous: true, orbitClass: 'Aten' },
-    { id: '2019-OD', name: '2019 OD', speedKmS: 25.4, diameterKm: 0.12, missDistanceKm: 358000, hazardous: false, orbitClass: 'Apollo' },
-    { id: '2011-AG5', name: '2011 AG5', speedKmS: 15.0, diameterKm: 0.14, missDistanceKm: 1800000, hazardous: false, orbitClass: 'Apollo' }
-];
+export const MOCK_ASTEROIDS = {};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+const ENDPOINTS = {
+    speed: 'fastest',
+    diameter: 'largest',
+    distance: 'closest'
+};
 
 const TABS = [
     { id: 'speed', label: 'Top speed', icon: '↗' },
@@ -33,15 +30,58 @@ export default function AsteroidLeaderboard() {
     const [activeTab, setActiveTab] = useState('speed');
     const [selectedAsteroid, setSelectedAsteroid] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
+    const [asteroids, setAsteroids] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const dropdownRef = useRef(null);
 
-    const sortedAsteroids = [...MOCK_ASTEROIDS].sort((a, b) => {
-        if (activeTab === 'speed') return b.speedKmS - a.speedKmS;
-        if (activeTab === 'diameter') return b.diameterKm - a.diameterKm;
-        if (activeTab === 'distance') return a.missDistanceKm - b.missDistanceKm;
-        return 0;
-    });
+    useEffect(() => {
+        const controller = new AbortController();
 
+        const fetchLeaderboard = async () => {
+            setLoading(true);
+            setError(null);
+            setSelectedAsteroid(null);
+            setOpenDropdownId(null);
+
+            try {
+                const endpoint = ENDPOINTS[activeTab];
+
+                const response = await fetch(
+                    `${API_BASE_URL}/api/leaderboard/${endpoint}?count=10`,
+                    { signal: controller.signal }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Leaderboard request failed: ${response.status}`
+                    );
+                }
+
+                const data = await response.json();
+                setAsteroids(data);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Leaderboard error:', err);
+                    setError(err.message || 'Unable to load leaderboard.');
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchLeaderboard();
+
+        return () => controller.abort();
+    }, [activeTab]);
+    // Redis sadrži već sortirane asteroide
+    const sortedAsteroids = asteroids;
+
+    // zatvaranje dropdown menija za slične asteroide
     useEffect(() => {
         const handlePointerDown = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -61,7 +101,10 @@ export default function AsteroidLeaderboard() {
     }, []);
 
     const handleFindSimilarBy = (targetAsteroid, criterion) => {
-        const remaining = MOCK_ASTEROIDS.filter((asteroid) => asteroid.id !== targetAsteroid.id);
+        const remaining = asteroids.filter((asteroid) => asteroid.id !== targetAsteroid.id);
+
+        if (remaining.length === 0) return;
+
         const closestMatch = remaining.reduce((best, asteroid) => {
             const difference = Math.abs(asteroid[criterion === 'speed'
                 ? 'speedKmS'
@@ -153,7 +196,9 @@ export default function AsteroidLeaderboard() {
                             </button>
                         ))}
                     </div>
-                    <span className="leaderboard-count">{sortedAsteroids.length} OBJECTS</span>
+                    <span className="leaderboard-count">
+                        {loading ? 'LOADING...' : `${sortedAsteroids.length} OBJECTS`}
+                    </span>
                 </div>
 
                 <div className="table-wrapper">
@@ -169,37 +214,91 @@ export default function AsteroidLeaderboard() {
                                     <th scope="col" className="text-right">Action</th>
                                 </tr>
                             </thead>
+
                             <tbody>
-                                {sortedAsteroids.map((asteroid, index) => {
-                                    const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : 'rank-normal';
-                                    return (
-                                        <tr key={asteroid.id} className="table-row">
-                                            <td>
-                                                <div className="cell-flex">
-                                                    <span className={`rank-badge ${rankClass}`}>{String(index + 1).padStart(2, '0')}</span>
-                                                    <div className="object-cell">
-                                                        <div className="asteroid-name-row">
-                                                            {asteroid.name}
-                                                            {asteroid.hazardous && <span className="pha-badge">PHA</span>}
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan="6" className="table-message">
+                                            Loading asteroid data...
+                                        </td>
+                                    </tr>
+                                ) : error ? (
+                                    <tr>
+                                        <td colSpan="6" className="table-message error">
+                                            {error}
+                                        </td>
+                                    </tr>
+                                ) : sortedAsteroids.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="table-message">
+                                            No asteroids found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    sortedAsteroids.map((asteroid, index) => {
+                                        const rankClass =
+                                            index === 0 ? 'rank-gold' :
+                                                index === 1 ? 'rank-silver' :
+                                                    index === 2 ? 'rank-bronze' :
+                                                        'rank-normal';
+
+                                        return (
+                                            <tr key={asteroid.id} className="table-row">
+                                                <td>
+                                                    <div className="cell-flex">
+                                                        <span className={`rank-badge ${rankClass}`}>
+                                                            {String(index + 1).padStart(2, '0')}
+                                                        </span>
+
+                                                        <div className="object-cell">
+                                                            <div className="asteroid-name-row">
+                                                                {asteroid.name}
+
+                                                                {asteroid.hazardous && (
+                                                                    <span className="pha-badge">
+                                                                        PHA
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            <div className="asteroid-id">
+                                                                ID: {asteroid.id}
+                                                            </div>
                                                         </div>
-                                                        <div className="asteroid-id">ID: {asteroid.id}</div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td><span className="orbit-label">{asteroid.orbitClass}</span></td>
-                                            <td className={`font-mono ${activeTab === 'speed' ? 'highlight-metric' : ''}`}>
-                                                {asteroid.speedKmS.toFixed(1)} <span className="unit">km/s</span>
-                                            </td>
-                                            <td className={`font-mono ${activeTab === 'diameter' ? 'highlight-metric' : ''}`}>
-                                                {asteroid.diameterKm.toFixed(2)} <span className="unit">km</span>
-                                            </td>
-                                            <td className={`font-mono ${activeTab === 'distance' ? 'highlight-metric' : ''}`}>
-                                                {formatDistance(asteroid.missDistanceKm)} <span className="unit">M km</span>
-                                            </td>
-                                            <td className="text-right">{renderAction(asteroid)}</td>
-                                        </tr>
-                                    );
-                                })}
+                                                </td>
+
+                                                <td>
+                                                    <span className="orbit-label">
+                                                        {asteroid.orbitClass}
+                                                    </span>
+                                                </td>
+
+                                                <td className={`font-mono ${activeTab === 'speed' ? 'highlight-metric' : ''
+                                                    }`}>
+                                                    {asteroid.speedKmS.toFixed(1)}
+                                                    <span className="unit"> km/s</span>
+                                                </td>
+
+                                                <td className={`font-mono ${activeTab === 'diameter' ? 'highlight-metric' : ''
+                                                    }`}>
+                                                    {asteroid.diameterKm.toFixed(2)}
+                                                    <span className="unit"> km</span>
+                                                </td>
+
+                                                <td className={`font-mono ${activeTab === 'distance' ? 'highlight-metric' : ''
+                                                    }`}>
+                                                    {formatDistance(asteroid.missDistanceKm)}
+                                                    <span className="unit"> M km</span>
+                                                </td>
+
+                                                <td className="text-right">
+                                                    {renderAction(asteroid)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>

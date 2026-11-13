@@ -34,7 +34,7 @@ public class AsteroidSimilarityService
 
         // 4. i 5. jedino ima smisla racunati kada
         // oba asteroida imaju prilaske Zemlji (ili cemu vec) 
-        if(firstClosest != null && secondClosest != null)
+        if (firstClosest != null && secondClosest != null)
         {
             velocitySimilarity = CalculateNumericSimilarity(firstClosest.RelativeVelocityKps, secondClosest.RelativeVelocityKps);
 
@@ -96,10 +96,10 @@ public class AsteroidSimilarityService
     {
         double maxValue = Math.Max(Math.Abs(first), Math.Abs(second));
 
-        if(maxValue == 0)
+        if (maxValue == 0)
             return 1;
-        
-        return Math.Max(0, 1 - Math.Abs(first-second) / maxValue);
+
+        return Math.Max(0, 1 - Math.Abs(first - second) / maxValue);
     }
 
     // Posebna formula za apsolutnu magnitudu
@@ -124,9 +124,9 @@ public class AsteroidSimilarityService
     private void AddToTotal(double? similarity, double weight,
                             ref double totalScore, ref double totalWeight)
     {
-        if(similarity == null)
+        if (similarity == null)
             return;
-        
+
         totalScore += similarity.Value * weight;
         totalWeight += weight;
     }
@@ -143,9 +143,9 @@ public class AsteroidSimilarityService
         var similarities = new List<AsteroidSimilarityModel>();
 
         // Prolazimo kroz sve moguce kombinacije asteroida
-        for(int i=0; i<asteroids.Count; i++)
+        for (int i = 0; i < asteroids.Count; i++)
         {
-            for(int j=i+1; j<asteroids.Count; j++)
+            for (int j = i + 1; j < asteroids.Count; j++)
             {
                 var similarity = CalculateSimilarity(asteroids[i], asteroids[j]);
                 similarities.Add(similarity);

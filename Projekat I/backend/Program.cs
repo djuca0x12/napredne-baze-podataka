@@ -1,6 +1,5 @@
 using Neo4j.Driver;
 using StackExchange.Redis;
-using AsteroidTracker.Repositories;
 using AsteroidTracker.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,10 +52,11 @@ builder.Services.AddCors(options =>
         policy.AllowAnyHeader()
               .AllowAnyMethod()
               .WithOrigins(
-                  "http://localhost:5500",
-                  "https://localhost:5500",
-                  "http://127.0.0.1:5500",
-                  "https://127.0.0.1:5500");
+                  "http://localhost:5173",
+                  "https://localhost:5173",
+                  "http://127.0.0.1:5173",
+                  "https://127.0.0.1:5173"
+                  );
     });
 });
 
@@ -72,9 +72,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
 app.UseCors("CORS");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapGet("/", async context =>
+{
+    context.Response.Redirect("/swagger");
+    await Task.CompletedTask;
+});
 
 app.Run();

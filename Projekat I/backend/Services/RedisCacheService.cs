@@ -10,11 +10,28 @@ public class RedisCacheService
     // versioned cache keys:
     // redis može da invalidira sve rezultate pretrage jednim atomičnim inkrementom,
     // umesto da se radi scan za sve searches ključeve
-    // private const string SearchCacheVersionKey = "cache:version:asteroid-search";
+    private const string SearchCacheVersionKey = "cache:version:asteroid-search";
 
     public RedisCacheService(IConnectionMultiplexer redis)
     {
         _database = redis.GetDatabase();
+    }
+
+    // kreira versioned search cache key
+    // +1 na verziju invalidira sve prethodne ključeve za pretragu
+    // tj. logički invalidira sve stare unose iz keša, koji se fizički obrišu kad istekne TTL
+    // nema potrebe da ručno brišemo npr. asteroid:search:v1:2019
+    public async Task<string> GetSearchCacheKeyAsync(string normalizedName)
+    {
+        var version = await _database.StringGetAsync(
+            SearchCacheVersionKey
+        );
+
+        string currentVersion = version.IsNullOrEmpty
+            ? "0"
+            : version.ToString();
+
+        return $"asteroid:search:v{currentVersion}:{normalizedName}";
     }
 
     // čuvanje objekata u Redisu sa ograničenim TTL
@@ -63,8 +80,20 @@ public class RedisCacheService
         // await _database.KeyDeleteAsync("leaderboard:fastest");
         // await _database.KeyDeleteAsync("leaderboard:closest");
 
-        // ključevi za leaderboard i statistiku su van keš invalidacije?
-        // takođe, rezultati pretrage nisu ovde invalidirani
+
+        // takođe, keširani rezultati pretrage su ovde invalidirani, odjednom svi!
+        // stari ključečvi postanu nevalidni logički promenom verzije, a onda i fizički istekom TTL-a
+        /*
+            pre sinhronizacije:
+            asteroid:search:v0:2019
+            asteroid:search:v0:433
+
+            posle sinhronizacije:
+            asteroid:search:v1:2019
+            asteroid:search:v1:433
+        */
+        await _database.StringIncrementAsync("cache:version:asteroid-search");
+
     }
 
 }

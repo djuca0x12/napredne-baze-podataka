@@ -3,7 +3,7 @@ using AsteroidTracker.Code;
 using AsteroidTracker.Models;
 using Neo4j.Driver;
 
-namespace AsteroidTracker.Repositories;
+namespace AsteroidTracker.Services;
 
 // Komunicira sa Neo4J radi cuvanja podataka.
 public class Neo4jAsteroidRepository
@@ -246,7 +246,7 @@ public class Neo4jAsteroidRepository
             var records = await queryResult.ToListAsync();
 
             // Ako asteroid ne postoji, vracamo null!
-            if(records.Count == 0)
+            if (records.Count == 0)
                 return null;
 
             var record = records[0];
@@ -328,15 +328,15 @@ public class Neo4jAsteroidRepository
 
         var result = await session.ExecuteReadAsync(async tx =>
         {
-           var queryResult = await tx.RunAsync(
-            """
+            var queryResult = await tx.RunAsync(
+             """
             MATCH (a:Asteroid {id: $id})-[r:SIMILAR_TO]-(b:Asteroid)
 
             RETURN a.id AS firstId,
                    b.id AS secondId,
                    r AS similarity
             """,
-            new { id });
+             new { id });
 
             var records = await queryResult.ToListAsync();
 
@@ -400,7 +400,7 @@ public class Neo4jAsteroidRepository
 
             var similarities = new List<AsteroidSimilarityModel>();
 
-            foreach(var record in records)
+            foreach (var record in records)
             {
                 // Pristupamo svojstvima
                 var similarity = record["similarity"].As<IRelationship>();

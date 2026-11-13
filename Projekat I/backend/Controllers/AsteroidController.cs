@@ -1,5 +1,4 @@
 using AsteroidTracker.Models;
-using AsteroidTracker.Repositories;
 using AsteroidTracker.Services;
 
 namespace AsteroidTracker.Controllers;
@@ -17,7 +16,7 @@ public class AsteroidController : ControllerBase
     // da li se podaci citaju iz kesa ili baze.
     private readonly ILogger<AsteroidController> _logger;
 
-    public AsteroidController(Neo4jAsteroidRepository rep, RedisCacheService cache,  RedisLeaderboardService leaderboards,
+    public AsteroidController(Neo4jAsteroidRepository rep, RedisCacheService cache, RedisLeaderboardService leaderboards,
     RedisStatisticsService statistics, ILogger<AsteroidController> log)
     {
         _repository = rep;
@@ -105,7 +104,8 @@ public class AsteroidController : ControllerBase
 
         // Redis kljuc: 
         // todo: da li je validan format ključa za više potencijalnih rezultata? dodati hash/brojač/uuid?
-        string key = $"asteroid:search:{normalizedName}";
+        //string key = $"asteroid:search:{normalizedName}";
+        string key = await _cache.GetSearchCacheKeyAsync(normalizedName);
 
         var result = await _cache.GetAsync<List<AsteroidModel>>(key);
 

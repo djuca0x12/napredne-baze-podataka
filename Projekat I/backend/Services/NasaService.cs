@@ -78,7 +78,7 @@ public class SimpleNasaService
                         .GetProperty("kilometers")
                         .GetProperty("estimated_diameter_max")
                         .GetDouble(),
-                    
+
                     AbsoluteMagnitude = item
                         .GetProperty("absolute_magnitude_h")
                         .GetDouble()
@@ -87,12 +87,12 @@ public class SimpleNasaService
                 if (item.TryGetProperty(
                         "close_approach_data", out var approaches))
                 {
-                    foreach(var approach in approaches.EnumerateArray())
+                    foreach (var approach in approaches.EnumerateArray())
                     {
                         string epochString = approach
                             .GetProperty("epoch_date_close_approach")
                             .GetRawText();
-                        
+
                         long.TryParse(
                             epochString,
                             out long epoch);
@@ -112,7 +112,7 @@ public class SimpleNasaService
                             NumberStyles.Float,
                             CultureInfo.InvariantCulture,
                             out double velocity);
-                        
+
                         double.TryParse(
                             distanceString,
                             NumberStyles.Float,

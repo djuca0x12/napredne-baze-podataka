@@ -13,9 +13,7 @@ public class RedisLeaderboardService
     }
 
     // dodavanje pojedinačnih vrednosti u leaderboard (sorted set)
-    public async Task AddToLargestLeaderboardAsync(
-        string asteroidId,
-        double diameter)
+    public async Task AddToLargestLeaderboardAsync(string asteroidId, double diameter)
     {
         await _database.SortedSetAddAsync(
             "leaderboard:largest",  // ključ
@@ -24,9 +22,7 @@ public class RedisLeaderboardService
         );
     }
 
-    public async Task AddToFastestLeaderboardAsync(
-        string asteroidId,
-        double speed)
+    public async Task AddToFastestLeaderboardAsync(string asteroidId, double speed)
     {
         await _database.SortedSetAddAsync(
             "leaderboard:fastest",
@@ -35,9 +31,7 @@ public class RedisLeaderboardService
         );
     }
 
-    public async Task AddToClosestLeaderboardAsync(
-        string asteroidId,
-        double missDistance)
+    public async Task AddToClosestLeaderboardAsync(string asteroidId, double missDistance)
     {
         await _database.SortedSetAddAsync(
             "leaderboard:closest",
@@ -47,8 +41,7 @@ public class RedisLeaderboardService
     }
 
     // poziva se iz AsteroidBackgroundService, da ažurira svaki leaderboard
-    public async Task RebuildLeaderboardsAsync(
-        List<AsteroidModel> asteroids)
+    public async Task RebuildLeaderboardsAsync(List<AsteroidModel> asteroids)
     {
         await _database.KeyDeleteAsync("leaderboard:largest");
         await _database.KeyDeleteAsync("leaderboard:fastest");
@@ -101,8 +94,7 @@ public class RedisLeaderboardService
     }
 
     // prikaz prvih N podataka iz Redis leaderboard-a
-    public async Task<SortedSetEntry[]> GetLargestLeaderboardAsync(
-        int count = 10)
+    public async Task<SortedSetEntry[]> GetLargestLeaderboardAsync(int count = 10)
     {
         // vraća opseg elemenata [0 - count-1] po ključu, iz sorted set strukture
         // default poredak je od manjih ka većim vrednostima
@@ -114,8 +106,7 @@ public class RedisLeaderboardService
         );
     }
 
-    public async Task<SortedSetEntry[]> GetFastestLeaderboardAsync(
-        int count = 10)
+    public async Task<SortedSetEntry[]> GetFastestLeaderboardAsync(int count = 10)
     {
         return await _database.SortedSetRangeByRankWithScoresAsync(
             "leaderboard:fastest",
@@ -125,8 +116,7 @@ public class RedisLeaderboardService
         );
     }
 
-    public async Task<SortedSetEntry[]> GetClosestLeaderboardAsync(
-        int count = 10)
+    public async Task<SortedSetEntry[]> GetClosestLeaderboardAsync(int count = 10)
     {
         return await _database.SortedSetRangeByRankWithScoresAsync(
             "leaderboard:closest",
