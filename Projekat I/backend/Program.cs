@@ -40,8 +40,10 @@ builder.Services.AddSingleton<Neo4jAsteroidRepository>();
 // Servis koji periodicno preuzimanje podataka.
 builder.Services.AddHostedService<AsteroidBackgroundService>();
 
-// Redis:
+// Redis: sva tri servisa koriste istu konekciju
 builder.Services.AddSingleton<RedisCacheService>();
+builder.Services.AddSingleton<RedisLeaderboardService>();
+builder.Services.AddSingleton<RedisStatisticsService>();
 
 // CORS
 builder.Services.AddCors(options =>

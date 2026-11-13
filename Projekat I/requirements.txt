@@ -1,5 +1,42 @@
 // za pokretanje docker kontejnera sa redis i neo4j bazama podataka
 docker compose up -d
 
+// Kreirati API Key i ubaciti u appsettings.Devolpment.json!
+
+// Instalirano:
+    dotnet add package Neo4j.Driver
+    dotnet add package StackExchange.Redis
+    dotnet add package Microsoft.Extensions.Http
+
+// Pristup Neo4J preko browser-a:
+    http://localhost:7474/browser/
+    -Zatim unesi password iz appsettings.Devolpment.json (your_secure_password)
+    -Primer upita koji vraca sve asteroide:     MATCH (a:Asteroid)
+                                                RETURN a;
+    -Kako nam izgleda baza: (Ne mogu da verujem da ovo radi, VALJDA!?)
+        MATCH (a:Asteroid)
+        OPTIONAL MATCH (a)-[h:HAS_APPROACH]->(p:Approach)
+        OPTIONAL MATCH (a)-[s:SIMILAR_TO]-(b:Asteroid)
+        RETURN a, h, p, s, b
+        LIMIT 100; // Obavezno limitiraj da ne bi sve poludelo 
+
 // frontend
 npm install react-router-dom lucide-react
+
+// redis-cli
+docker exec -it redis-cache redis-cli
+
+// provera redis leaderboard podataka:
+// prikazaće sve ključeve, scan bolje nego get
+scan 0
+
+// prikazaće ključeve prvih 10 najbližih asteroida, sa vrednostima sortiranim u rastućem redosledu (default)
+zrange leaderboard:closest 0 9 withsccores
+
+// prikazaće ključeve prvih 10 najbližih asteroida, sa vrednostima sortiranim u opadajućem redosledu (zato rev u zrevrange)
+zrevrange leaderboard:largest 0 9 withsccores
+
+// testiranje AsteroidController.cs
+https://localhost:7080/Asteroid
+https://localhost:7080/Asteroid/id?id=3841634
+https://localhost:7080/Asteroid/name?name=2019

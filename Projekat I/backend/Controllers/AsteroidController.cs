@@ -10,15 +10,20 @@ public class AsteroidController : ControllerBase
 {
     private readonly Neo4jAsteroidRepository _repository;
     private readonly RedisCacheService _cache;
+    private readonly RedisLeaderboardService _leaderboards;
+    private readonly RedisStatisticsService _statistics;
 
     // Dodao sam loger da bi smo u svakoj metodi mogli da proverimo
     // da li se podaci citaju iz kesa ili baze.
     private readonly ILogger<AsteroidController> _logger;
 
-    public AsteroidController(Neo4jAsteroidRepository rep, RedisCacheService red, ILogger<AsteroidController> log)
+    public AsteroidController(Neo4jAsteroidRepository rep, RedisCacheService cache,  RedisLeaderboardService leaderboards,
+    RedisStatisticsService statistics, ILogger<AsteroidController> log)
     {
         _repository = rep;
-        _cache = red;
+        _cache = cache;
+        _leaderboards = leaderboards;
+        _statistics = statistics;
         _logger = log;
     }
 
@@ -33,12 +38,12 @@ public class AsteroidController : ControllerBase
         // Prvo proveravamo kes:
         var cachedAsteroids = await _cache.GetAsync<List<AsteroidModel>>("asteroids:all");
 
-        if(cachedAsteroids != null)
+        if (cachedAsteroids != null)
         {
             _logger.LogInformation("Podaci su procitani iz kesa");
             return Ok(cachedAsteroids);
         }
-        
+
         // Nemamo podataka u kesu, citamo iz baze, upisujemo u kes
         // i vracamo asteroide nazad
         var asteroids = await _repository.GetAllAsteroidsAsync();
@@ -63,14 +68,16 @@ public class AsteroidController : ControllerBase
 
         var asteroid = await _cache.GetAsync<AsteroidModel>(key);
 
-        _logger.LogInformation("Podaci su procitani iz kesa");
+        if (asteroid != null)
+            _logger.LogInformation("Asteroid {id} učitan iz keša", id);
 
-        if(asteroid == null)
+        else
         {
+            _logger.LogInformation("Asteroid {id} nije pronađen u kešu, traži se u Neo4j", id);
             asteroid = await _repository.GetAsteroidByIdAsync(id);
 
-            if(asteroid == null)
-                return BadRequest("Asteroida nema");
+            if (asteroid == null)
+                return NotFound("Asteroida nije pronađen");
 
             await _cache.SetAsync(
                 key,
@@ -78,21 +85,21 @@ public class AsteroidController : ControllerBase
                 TimeSpan.FromMinutes(30)
             );
 
-            _logger.LogInformation("Podaci su procitani iz baze, i upisani u kes");
+            _logger.LogInformation("Asteroid {Id} pročitan iz Neo4j i upisan u Redis.", id);
         }
 
         // Inkrementiranje broja pregleda detalja?????????
-        await _cache.IncrementAsteroidViewsAsync(id);
+        await _statistics.IncrementAsteroidViewsAsync(id);
 
         return Ok(asteroid);
     }
-    
+
     [HttpGet("name")]
     public async Task<ActionResult> SearchAsteroids(string name)
     {
-        if(string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name))
             return BadRequest("Morate uneti naziv asteroida");
-        
+
         // Sredjujemo naziv:
         string normalizedName = name.Trim().ToLowerInvariant();
 
@@ -102,7 +109,7 @@ public class AsteroidController : ControllerBase
 
         var result = await _cache.GetAsync<List<AsteroidModel>>(key);
 
-        if(result != null)
+        if (result != null)
         {
             _logger.LogInformation("Podaci su procitani iz kesa");
         }
@@ -110,7 +117,7 @@ public class AsteroidController : ControllerBase
         {
             result = await _repository.SearchAsteroidsByNameAsync(normalizedName);
 
-            if(result == null || result.Count == 0)
+            if (result == null || result.Count == 0)
             {
                 return BadRequest("Asteroid sa zadatim imenom ne postoji");
             }
@@ -125,12 +132,12 @@ public class AsteroidController : ControllerBase
         }
 
         // Povecava se broj ukupnih pretraga:
-        await _cache.IncrementTotalSearchesAsync();
+        await _statistics.IncrementTotalSearchesAsync();
 
         // Kao i broj pretraga pojedinacnih asteroida
-        foreach(var asteroid in result)
+        foreach (var asteroid in result)
         {
-            await _cache.IncrementAsteroidSearchesAsync(asteroid.Id);
+            await _statistics.IncrementAsteroidSearchesAsync(asteroid.Id);
         }
 
         return Ok(result);

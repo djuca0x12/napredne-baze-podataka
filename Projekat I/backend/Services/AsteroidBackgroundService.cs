@@ -20,12 +20,14 @@ public class AsteroidBackgroundService : BackgroundService
     private readonly ILogger<AsteroidBackgroundService> _logger;
     private readonly AsteroidSimilarityService _similarityService;
     private readonly RedisCacheService _cache;
+    private readonly RedisLeaderboardService _leaderboards;
 
     public AsteroidBackgroundService(
         SimpleNasaService nasaService,
         Neo4jAsteroidRepository repository,
         AsteroidSimilarityService similarityService,
         RedisCacheService cache,
+        RedisLeaderboardService leaderboards,
         ILogger<AsteroidBackgroundService> logger)
     {
         _nasaService = nasaService;
@@ -33,6 +35,7 @@ public class AsteroidBackgroundService : BackgroundService
         _logger = logger;
         _similarityService = similarityService;
         _cache = cache;
+        _leaderboards = leaderboards;
     }
 
     protected override async Task ExecuteAsync(
@@ -74,6 +77,9 @@ public class AsteroidBackgroundService : BackgroundService
                 // Brisemo zastarele podatke iz kesa
                 // todo: da li treba prazniti i redis od zastarelih podataka ili je to automatski?
                 await _cache.InvalidateAsteroidCacheAsync(allAsteroids.Select(a => a.Id).ToList());
+
+                // popunjavamo i leaderboard nakon učitavanja novih asteroida i brisanja zastarelih
+                await _leaderboards.RebuildLeaderboardsAsync(allAsteroids);
 
                 _logger.LogInformation(
                     "Uspesno obradjeno {NewCount} novih/azuriranih asteroida. " +

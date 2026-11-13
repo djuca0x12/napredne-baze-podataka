@@ -1,25 +1,3 @@
-0. Pokretanje docker composera:
-    docker compose up -d
-
-1. Kreirati API Key i ubaciti u appsettings.Devolpment.json!
-
-2. Instalirano:
-    dotnet add package Neo4j.Driver
-    dotnet add package StackExchange.Redis
-    dotnet add package Microsoft.Extensions.Http
-
-3. Pristup Neo4J preko browser-a:
-    http://localhost:7474/browser/
-    -Zatim unesi password iz appsettings.Devolpment.json (your_secure_password)
-    -Primer upita koji vraca sve asteroide:     MATCH (a:Asteroid)
-                                                RETURN a;
-    -Kako nam izgleda baza: (Ne mogu da verujem da ovo radi, VALJDA!?)
-        MATCH (a:Asteroid)
-        OPTIONAL MATCH (a)-[h:HAS_APPROACH]->(p:Approach)
-        OPTIONAL MATCH (a)-[s:SIMILAR_TO]-(b:Asteroid)
-        RETURN a, h, p, s, b
-        LIMIT 100; // Obavezno limitiraj da ne bi sve poludelo 
-
 4. Proveriti da li ce biti potrebno da dodamo jos jednu liniju
     u CORS-u da bi frontend mogao da pristupi backend-u!
 
@@ -29,8 +7,6 @@
 7. Trenutno se asteroidi preuzimaju na 24h
    Upisuju se u bazu, zajedno sa prilazima => grana Approach
    Povezuju se sa slicnim asteroidima => SIMILAR_TO
-
-9. Leaderboard - preko redisa.
 
 10. Brojac - preko redisa
            - gde povecavamo brojac za pregled detalja (ako se oni vide na kartici odmah)
@@ -46,20 +22,12 @@
     vracamo ih odatle, ukoliko ih nema trazimo ih u bazi, azuriramo kes
     i vracamo!
 
-13. Kontroleri za Asteroide, Leaderboard i Brojace! => Potrebno doraditi
+13. Kontroleri za Asteroide i Brojace! => Potrebno doraditi
 
 15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
     -search, similarities
 
 16. Da li nam je neophodno "IspitCS": "Server=(localdb)\\Ispit;Database=Ispit" u appsettings.json?
-
-    urađeno -> 17. Dodati show similar hover i search bar na frontu
-
-18. Dodati deleteExpired metodu za pražnjenje baze od zastarelih asteroida
-
-19. Povećati na 0.8 faktor sličnosti
-
-20. Obrisati IspitController.cs i IspitContext.cs
 
 21. Da li treba i .NET i React da pokrećemo preko Docker-a?
 
@@ -68,3 +36,11 @@
 23. Povezati back i front <3 (obavezno obrisati setTimeout koji imitira latenciju pri pristupu bazi)
 
 24. Ispisati smisleniji tekst za celu aplikaciju
+
+25. K-Means algoritam za klasterovanje čvorova
+
+26. Simulacija promene vrednosti za asteroide iz leaderboard-a
+
+27. Swagger endpoint?
+
+28. deployment?

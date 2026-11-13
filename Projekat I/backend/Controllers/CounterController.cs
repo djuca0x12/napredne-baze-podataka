@@ -10,6 +10,8 @@ public class CounterController : ControllerBase
 {
     private readonly Neo4jAsteroidRepository _repository;
     private readonly RedisCacheService _cache;
+    // private readonly RedisLeaderboardService _leaderboards;
+    // private readonly RedisStatisticsService _statistics;
 
     // Dodao sam loger da bi smo u svakoj metodi mogli da proverimo
     // da li se podaci citaju iz kesa ili baze.
