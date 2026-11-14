@@ -146,3 +146,159 @@
         padding: 1.1rem 1.15rem;
     }
 }
+
+
+/* Dashboard section */
+.dashboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.dashboard-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 0;
+}
+
+/* Statistics card variations */
+.metric-card--views,
+.metric-card--searches {
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-symbol--views {
+    color: #67e8f9;
+    border-color: rgba(103, 232, 249, 0.25);
+    background: rgba(103, 232, 249, 0.09);
+}
+
+.metric-symbol--search {
+    color: #a5b4fc;
+    border-color: rgba(165, 180, 252, 0.25);
+    background: rgba(129, 140, 248, 0.09);
+}
+
+/* Activity comparison card */
+.activity-card {
+    min-height: 150px;
+    padding: 1.35rem 1.5rem;
+    gap: 1.1rem;
+}
+
+.activity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.activity-title {
+    margin: 0.4rem 0 0;
+    color: var(--space-text);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.activity-total {
+    color: var(--space-text-muted);
+    font: 500 0.72rem "DM Mono", monospace;
+    white-space: nowrap;
+}
+
+/* Horizontal proportional bar */
+.activity-bar {
+    display: flex;
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #263449;
+}
+
+.activity-bar-views {
+    height: 100%;
+    background: linear-gradient(90deg,
+            #0891b2,
+            #67e8f9);
+    transition: width 400ms ease;
+}
+
+.activity-bar-searches {
+    height: 100%;
+    background: linear-gradient(90deg,
+            #6366f1,
+            #a5b4fc);
+    transition: width 400ms ease;
+}
+
+.activity-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.activity-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--space-text-muted);
+    font-size: 0.76rem;
+}
+
+.activity-legend-item strong {
+    margin-left: 0.2rem;
+    color: var(--space-text);
+    font: 500 0.8rem "DM Mono", monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+}
+
+.legend-dot--views {
+    background: #67e8f9;
+    box-shadow: 0 0 7px rgba(103, 232, 249, 0.4);
+}
+
+.legend-dot--searches {
+    background: #818cf8;
+    box-shadow: 0 0 7px rgba(129, 140, 248, 0.4);
+}
+
+/* Responsive layout */
+@media (max-width: 800px) {
+    .dashboard-metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .dashboard-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .activity-card {
+        padding: 1.1rem 1.15rem;
+    }
+
+    .activity-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .activity-legend {
+        gap: 0.85rem 1.25rem;
+    }
+}

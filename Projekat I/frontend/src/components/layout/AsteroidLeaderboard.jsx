@@ -24,6 +24,13 @@ const CRITERIA = [
     { id: 'distance', label: 'By distance' }
 ];
 
+// za kriterijum sličnosti koji se šalje na back za pretragu
+const SIMILARITY_CRITERIA = {
+    speed: 'velocity',
+    diameter: 'diameter',
+    distance: 'missdistance'
+};
+
 const formatDistance = (km) => (km / 1000000).toFixed(2);
 
 export default function AsteroidLeaderboard() {
@@ -34,6 +41,12 @@ export default function AsteroidLeaderboard() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // za sličnost asteroida
+    const [similarAsteroids, setSimilarAsteroids] = useState([]);
+    const [similarLoading, setSimilarLoading] = useState(false);
+    const [similarError, setSimilarError] = useState(null);
+    const [similarTitle, setSimilarTitle] = useState('');
 
     const dropdownRef = useRef(null);
 
@@ -100,35 +113,62 @@ export default function AsteroidLeaderboard() {
         };
     }, []);
 
-    const handleFindSimilarBy = (targetAsteroid, criterion) => {
-        const remaining = asteroids.filter((asteroid) => asteroid.id !== targetAsteroid.id);
-
-        if (remaining.length === 0) return;
-
-        const closestMatch = remaining.reduce((best, asteroid) => {
-            const difference = Math.abs(asteroid[criterion === 'speed'
-                ? 'speedKmS'
-                : criterion === 'diameter'
-                    ? 'diameterKm'
-                    : 'missDistanceKm'] - targetAsteroid[criterion === 'speed'
-                        ? 'speedKmS'
-                        : criterion === 'diameter'
-                            ? 'diameterKm'
-                            : 'missDistanceKm']);
-            const bestDifference = Math.abs(best[criterion === 'speed'
-                ? 'speedKmS'
-                : criterion === 'diameter'
-                    ? 'diameterKm'
-                    : 'missDistanceKm'] - targetAsteroid[criterion === 'speed'
-                        ? 'speedKmS'
-                        : criterion === 'diameter'
-                            ? 'diameterKm'
-                            : 'missDistanceKm']);
-            return difference < bestDifference ? asteroid : best;
-        }, remaining[0]);
-
-        setSelectedAsteroid(closestMatch);
+    const handleFindSimilarBy = async (targetAsteroid, criterion) => {
         setOpenDropdownId(null);
+        setSelectedAsteroid(null);
+
+        setSimilarAsteroids([]);
+        setSimilarError(null);
+        setSimilarLoading(true);
+
+        const backendCriterion = SIMILARITY_CRITERIA[criterion];
+
+        const labels = {
+            speed: 'Speed similarity',
+            diameter: 'Diameter similarity',
+            distance: 'Miss-distance similarity'
+        };
+
+        setSimilarTitle(
+            `${labels[criterion]} — ${targetAsteroid.name}`
+        );
+
+        if (!backendCriterion) {
+            setSimilarError(`Unsupported similarity criterion: ${criterion}`);
+            setSimilarLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/Similarity/${encodeURIComponent(targetAsteroid.id)}/${backendCriterion}`
+            );
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+
+                throw new Error(
+                    `Similarity request failed (${response.status}): ${errorBody}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error('Invalid similarity response from server.');
+            }
+
+            setSimilarAsteroids(data);
+
+        } catch (err) {
+            console.error('Similarity request error:', err);
+
+            setSimilarError(
+                err.message || 'Unable to load similar asteroids.'
+            );
+        } finally {
+            setSimilarLoading(false);
+        }
     };
 
     const renderAction = (asteroid) => (
@@ -160,6 +200,125 @@ export default function AsteroidLeaderboard() {
             )}
         </div>
     );
+
+    const getAsteroidMetrics = (asteroid) => {
+        const approaches = asteroid.approaches ?? [];
+
+        const velocities = approaches
+            .map(a => Number(a.relativeVelocityKps))
+            .filter(Number.isFinite);
+
+        const distances = approaches
+            .map(a => Number(a.missDistance))
+            .filter(Number.isFinite);
+
+        return {
+            velocity: velocities.length
+                ? Math.max(...velocities)
+                : null,
+
+            diameter: asteroid.diameterMaxKm ?? null,
+
+            missDistance: distances.length
+                ? Math.min(...distances)
+                : null
+        };
+    };
+
+    const formatSimilarity = (value) => {
+        if (value == null || !Number.isFinite(Number(value))) {
+            return 'N/A';
+        }
+
+        // Assumes the backend returns similarity in the 0–1 range.
+        return `${(Number(value) * 100).toFixed(1)}%`;
+    };
+
+    const renderSimilarAsteroid = (result, index) => {
+        const asteroid = result.asteroid;
+
+        if (!asteroid) return null;
+
+        const metrics = getAsteroidMetrics(asteroid);
+
+        return (
+            <article
+                className="similar-result-card"
+                key={asteroid.id}
+            >
+                <div className="similar-result-header">
+                    <div className="similar-result-identity">
+                        <span className="similar-result-rank">
+                            {String(index + 1).padStart(2, '0')}
+                        </span>
+
+                        <div className="similar-result-name-group">
+                            <h3>{asteroid.name}</h3>
+
+                            <span className="similar-result-id">
+                                ID: {asteroid.id}
+                            </span>
+                        </div>
+                    </div>
+
+                    {asteroid.isHazardous && (
+                        <span className="pha-badge">PHA</span>
+                    )}
+                </div>
+
+                <div className="similarity-score-row">
+                    <div>
+                        <span className="similarity-score-label">
+                            OVERALL SIMILARITY
+                        </span>
+
+                        <strong className="similarity-score">
+                            {formatSimilarity(result.overallSimilarity)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span className="similarity-score-label">
+                            SELECTED CRITERION
+                        </span>
+
+                        <strong className="similarity-criterion-score">
+                            {formatSimilarity(result.criterionSimilarity)}
+                        </strong>
+                    </div>
+                </div>
+
+                <div className="similar-result-metrics">
+                    <div className="similar-metric">
+                        <span>VELOCITY</span>
+                        <strong>
+                            {metrics.velocity != null
+                                ? `${metrics.velocity.toFixed(2)} km/s`
+                                : 'N/A'}
+                        </strong>
+                    </div>
+
+                    <div className="similar-metric">
+                        <span>DIAMETER</span>
+                        <strong>
+                            {metrics.diameter != null
+                                ? `${Number(metrics.diameter).toFixed(2)} km`
+                                : 'N/A'}
+                        </strong>
+                    </div>
+
+                    <div className="similar-metric">
+                        <span>MISS DISTANCE</span>
+                        <strong>
+                            {metrics.missDistance != null
+                                ? `${(metrics.missDistance / 1_000_000).toFixed(2)} M km`
+                                : 'N/A'}
+                        </strong>
+                    </div>
+                </div>
+            </article>
+        );
+    };
 
     return (
         <section className="asteroid-container" aria-labelledby="leaderboard-title">
@@ -303,6 +462,70 @@ export default function AsteroidLeaderboard() {
                         </table>
                     </div>
                 </div>
+
+                {/* Similarity results */}
+                {(similarLoading || similarError || similarTitle || similarAsteroids.length > 0) && (
+                    <section
+                        className="similar-results-section"
+                        aria-live="polite"
+                        aria-labelledby="similar-results-title"
+                    >
+                        <header className="similar-results-header">
+                            <div>
+                                <div className="telemetry-badge">
+                                    <span className="pulsing-dot" aria-hidden="true" />
+                                    SIMILARITY ANALYSIS
+                                </div>
+
+                                <h2 id="similar-results-title">
+                                    {similarTitle || 'Similar asteroids'}
+                                </h2>
+
+                                <p>
+                                    Asteroids returned by the similarity analysis.
+                                </p>
+                            </div>
+
+                            <div className="similar-results-actions">
+                                {!similarLoading && !similarError && (
+                                    <span className="leaderboard-count">
+                                        {similarAsteroids.length} MATCHES
+                                    </span>
+                                )}
+
+                                <button
+                                    type="button"
+                                    className="similar-clear-btn"
+                                    onClick={() => {
+                                        setSimilarAsteroids([]);
+                                        setSimilarTitle('');
+                                        setSimilarError(null);
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        </header>
+
+                        {similarLoading ? (
+                            <div className="similar-results-message">
+                                Calculating asteroid similarities...
+                            </div>
+                        ) : similarError ? (
+                            <div className="similar-results-message error">
+                                {similarError}
+                            </div>
+                        ) : similarAsteroids.length === 0 ? (
+                            <div className="similar-results-message">
+                                No similar asteroids found for this criterion.
+                            </div>
+                        ) : (
+                            <div className="similar-results-grid">
+                                {similarAsteroids.map(renderSimilarAsteroid)}
+                            </div>
+                        )}
+                    </section>
+                )}
 
                 {selectedAsteroid && (
                     <AsteroidCard

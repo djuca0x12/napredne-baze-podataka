@@ -1,5 +1,6 @@
 namespace AsteroidTracker.Models;
 
+// zgodno za obradu asteroida, računanje sličnosti: rad na beku
 public class AsteroidSimilarityModel
 {
     public string FirstAsteroidId { get; set; } = string.Empty;

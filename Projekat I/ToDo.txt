@@ -3,9 +3,6 @@
    Upisuju se u bazu, zajedno sa prilazima => grana Approach
    Povezuju se sa slicnim asteroidima => SIMILAR_TO
 
-10. Brojac - preko redisa
-           - gde povecavamo brojac za pregled detalja (ako se oni vide na kartici odmah)
-
 11. Da li cemo podatke za brojace i generalno kes da cuvamo u Neo4J?
     -Trenutno ne, tako da su na primer brojaci (kao i sve ostalo) aktuelni dok  
     aplikacija radi i TTL ne istekne.
@@ -14,18 +11,10 @@
     vracamo ih odatle, ukoliko ih nema trazimo ih u bazi, azuriramo kes
     i vracamo!
 
-13. Kontroleri za Asteroide! => Potrebno doraditi
-
 15. Proveriti invalidaciju kesa za redis (RedisCacheService). 
     -similarities
 
-16. Da li nam je neophodno "IspitCS": "Server=(localdb)\\Ispit;Database=Ispit" u appsettings.json?
-
 21. Da li treba i .NET i React da pokrećemo preko Docker-a?
-
-22. Svaki API endpoint mapirati pregledno u api.js (više fajlova po potrebi)
-
-23. Povezati back i front <3 (obavezno obrisati setTimeout koji imitira latenciju pri pristupu bazi)
 
 24. Ispisati smisleniji tekst za celu aplikaciju
 

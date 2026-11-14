@@ -219,3 +219,116 @@
         width: 100%;
     }
 }
+
+
+.search-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--space-border);
+    color: var(--space-text-muted);
+    font: 500 0.68rem "DM Mono", monospace;
+    letter-spacing: 0.07em;
+}
+
+.search-results-heading strong {
+    color: var(--space-cyan);
+    font-weight: 500;
+}
+
+.search-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.search-result-item {
+    width: 100%;
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid var(--space-border);
+    border-radius: 9px;
+    color: var(--space-text);
+    background: rgba(3, 9, 20, 0.42);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--space-transition),
+        background var(--space-transition);
+}
+
+.search-result-item:hover,
+.search-result-item--active {
+    border-color: rgba(34, 211, 238, 0.45);
+    background: rgba(34, 211, 238, 0.06);
+}
+
+.search-result-item:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.search-result-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.search-result-main strong {
+    overflow-wrap: anywhere;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.search-result-main>span {
+    color: var(--space-text-muted);
+    font: 0.67rem "DM Mono", monospace;
+}
+
+.search-result-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    color: var(--space-text-muted);
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.search-result-hazard {
+    padding: 0.2rem 0.4rem;
+    border: 1px solid rgba(251, 113, 133, 0.25);
+    border-radius: 4px;
+    color: var(--space-danger);
+    background: rgba(244, 63, 94, 0.08);
+    font: 0.62rem "DM Mono", monospace;
+}
+
+.search-result-diameter {
+    font: 0.68rem "DM Mono", monospace;
+}
+
+.search-results-wrapper {
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+    .search-result-item {
+        align-items: flex-start;
+    }
+
+    .search-result-meta {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+}

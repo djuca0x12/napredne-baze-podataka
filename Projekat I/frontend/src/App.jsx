@@ -14,6 +14,15 @@ export default function App() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [statistics, setStatistics] = useState({
+        totalViews: 0,
+        totalSearches: 0
+    });
+
+    const [statisticsLoading, setStatisticsLoading] = useState(true);
+    const [statisticsError, setStatisticsError] = useState(null);
+
+    // učitava asteroide sa backend-a
     useEffect(() => {
         const controller = new AbortController();
 
@@ -32,7 +41,7 @@ export default function App() {
 
                 const data = await response.json();
 
-                // Adapt backend data to the existing frontend format.
+                // prilagođava podatke za format prikaza na frontu
                 const formattedAsteroids = data.map((asteroid) => {
                     const approaches = asteroid.approaches ?? [];
 
@@ -85,6 +94,53 @@ export default function App() {
         return () => controller.abort();
     }, []);
 
+    // Redis global statistics
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const fetchStatistics = async () => {
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/api/statistics`,
+                    { signal: controller.signal }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch statistics: ${response.status}`
+                    );
+                }
+
+                const data = await response.json();
+
+                setStatistics({
+                    totalViews: Number(data.totalViews ?? 0),
+                    totalSearches: Number(data.totalSearches ?? 0)
+                });
+
+                setStatisticsError(null);
+
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Statistics fetch error:', err);
+                    setStatisticsError(err.message);
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setStatisticsLoading(false);
+                }
+            }
+        };
+
+        fetchStatistics();
+
+        return () => controller.abort();
+    }, []);
+
+    const hazardousCount = asteroids.filter(
+        asteroid => asteroid.hazardous
+    ).length;
+
     return (
         <div className="app-layout">
             <main className="app-content">
@@ -109,11 +165,12 @@ export default function App() {
                 </header>
 
                 <AsteroidDashboardMetrics
-                    hazardousCount={
-                        asteroids.filter(a => a.hazardous).length
-                    }
+                    hazardousCount={hazardousCount}
                     apiCalls={342}
                     totalTracked={asteroids.length}
+                    totalViews={statistics.totalViews}
+                    totalSearches={statistics.totalSearches}
+                    statisticsLoading={statisticsLoading}
                 />
 
                 {error && (
@@ -122,7 +179,13 @@ export default function App() {
                     </p>
                 )}
 
-                <AsteroidSearch asteroids={asteroids} />
+                {statisticsError && (
+                    <p className="error-message">
+                        Unable to load usage statistics: {statisticsError}
+                    </p>
+                )}
+
+                <AsteroidSearch />
 
                 <AsteroidLeaderboard />
 

@@ -61,7 +61,7 @@ public class AsteroidController : ControllerBase
 
     // Vracanje asteroida po id-u
     [HttpGet("id")]
-    public async Task<ActionResult> GetAsteroidById(string id)
+    public async Task<ActionResult> GetAsteroidById([FromQuery] string id)
     {
         string key = $"asteroid:{id}"; // Redis podatak
 
@@ -87,14 +87,14 @@ public class AsteroidController : ControllerBase
             _logger.LogInformation("Asteroid {Id} pročitan iz Neo4j i upisan u Redis.", id);
         }
 
-        // Inkrementiranje broja pregleda detalja?????????
+        // Inkrementiranje broja pregleda detalja
         await _statistics.IncrementAsteroidViewsAsync(id);
 
         return Ok(asteroid);
     }
 
     [HttpGet("name")]
-    public async Task<ActionResult> SearchAsteroids(string name)
+    public async Task<ActionResult> SearchAsteroids([FromQuery] string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             return BadRequest("Morate uneti naziv asteroida");
@@ -119,7 +119,8 @@ public class AsteroidController : ControllerBase
 
             if (result == null || result.Count == 0)
             {
-                return BadRequest("Asteroid sa zadatim imenom ne postoji");
+                // vraća se prazna lista, kako se brojači ne bi inkrementirali naknadno
+                return Ok(new List<AsteroidModel>());
             }
 
             await _cache.SetAsync(
