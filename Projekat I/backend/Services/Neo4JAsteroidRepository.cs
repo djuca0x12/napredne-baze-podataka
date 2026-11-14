@@ -84,7 +84,49 @@ public class Neo4jAsteroidRepository
     public async Task SaveSimilaritiesAsync(
         List<AsteroidSimilarityModel> similarities)
     {
-        if (similarities.Count == 0)
+        if (similarities == null || similarities.Count == 0)
+        return;
+
+        // Kreiramo granu SIMILAR_TO samo ukoliko je
+        // vrednost slicnosti po nekom parametru veca od 85% (0.85)!
+        var filteredSimilarities = similarities
+            .Where(s => 
+                (s.DiameterSimilarity.HasValue && s.DiameterSimilarity.Value >= 0.85) ||
+                (s.AbsoluteMagnitudeSimilarity.HasValue && s.AbsoluteMagnitudeSimilarity.Value >= 0.85) ||
+                (s.HazardStatusSimilarity.HasValue && s.HazardStatusSimilarity.Value >= 0.85) ||
+                (s.VelocitySimilarity.HasValue && s.VelocitySimilarity.Value >= 0.85) ||
+                (s.MissDistanceSimilarity.HasValue && s.MissDistanceSimilarity.Value >= 0.85))
+            .Select(s =>
+            {
+                // Cuvamo samo jedan smer relacije (Abecedno poređenje ID-jeva)
+                bool firstComesFirst =
+                    string.CompareOrdinal(
+                        s.FirstAsteroidId,
+                        s.SecondAsteroidId) < 0;
+
+                return new
+                {
+                    firstId = firstComesFirst
+                        ? s.FirstAsteroidId
+                        : s.SecondAsteroidId,
+
+                    secondId = firstComesFirst
+                        ? s.SecondAsteroidId
+                        : s.FirstAsteroidId,
+
+                    overallSimilarity = s.OverallSimilarity,
+                    diameterSimilarity = s.DiameterSimilarity,
+                    absoluteMagnitudeSimilarity = s.AbsoluteMagnitudeSimilarity,
+                    hazardStatusSimilarity = s.HazardStatusSimilarity,
+                    velocitySimilarity = s.VelocitySimilarity,
+                    missDistanceSimilarity = s.MissDistanceSimilarity
+                };
+            })
+            .ToList();
+
+        // Ako nakon filtriranja nemamo nijedan par koji zadovoljava uslov,
+        //  prekidamo rad
+        if (filteredSimilarities.Count == 0)
             return;
 
         await using var session = _driver.AsyncSession();
@@ -110,36 +152,7 @@ public class Neo4jAsteroidRepository
                 """,
                 new
                 {
-                    similarities = similarities.Select(s =>
-                    {
-                        // Cuvamo samo jedan smer relacije.
-                        // Tako ne pravimo A -> B i B -> A.
-                        // CompareOrdinal - vrsi pordjenje po abecedi
-                        // tako da cemo uvek da radimo sa jednom stranom
-                        // i kreiramo jednu granu.
-                        bool firstComesFirst =
-                            string.CompareOrdinal(
-                                s.FirstAsteroidId,
-                                s.SecondAsteroidId) < 0;
-
-                        return new
-                        {
-                            firstId = firstComesFirst
-                                ? s.FirstAsteroidId
-                                : s.SecondAsteroidId,
-
-                            secondId = firstComesFirst
-                                ? s.SecondAsteroidId
-                                : s.FirstAsteroidId,
-
-                            overallSimilarity = s.OverallSimilarity,
-                            diameterSimilarity = s.DiameterSimilarity,
-                            absoluteMagnitudeSimilarity = s.AbsoluteMagnitudeSimilarity,
-                            hazardStatusSimilarity = s.HazardStatusSimilarity,
-                            velocitySimilarity = s.VelocitySimilarity,
-                            missDistanceSimilarity = s.MissDistanceSimilarity
-                        };
-                    }).ToList()
+                    similarities = filteredSimilarities
                 });
 
             await result.ConsumeAsync();
